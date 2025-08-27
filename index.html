@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Table Splitter — select all rows</title>
+    <style>
+      :root {
+        --bg: #f7fafc;
+        --card: #fff;
+        --muted: #6b7280;
+        --accent: #2563eb;
+        --border: #e6e9ee;
+      }
+      html, body { height:100%; margin:0; font-family:Inter, system-ui, "Helvetica Neue", Arial; background:var(--bg); color:#111; }
+      .wrap { max-width:980px; margin:28px auto; padding:20px; }
+      .card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px; box-shadow:0 6px 18px rgba(20,20,30,0.04); position:relative; overflow:visible; }
+      h1 { margin:0 0 8px; font-size:20px; }
+      p.lead { margin:0 0 12px; color:var(--muted); font-size:13px; }
+
+      /* ====== Изменения для "прилипающей" панели (обновлённые стили) ====== */
+      .controls-sentinel { height:1px; width:100%; display:block; }
+
+      .controls {
+        display:flex;
+        gap:8px;
+        margin-bottom:12px;
+        flex-wrap:wrap;
+
+        /* sticky behaviour */
+        position: -webkit-sticky;
+        position: sticky;
+        top: 16px;
+        z-index: 90;
+
+        /* обычный фон — белый, плавный переход при прилипании */
+        background: linear-gradient(var(--card), var(--card));
+        padding:12px;
+        border-radius:12px;
+        border: 1px solid transparent;
+        transition: box-shadow .22s cubic-bezier(.2,.9,.2,1),
+                    border-color .18s ease,
+                    background .18s ease,
+                    transform .18s ease;
+      }
+
+      /* когда панель "прилипла" — выделяем её визуально */
+      .controls.stuck {
+        /* лёгкая синяя подложка + полупрозрачность для читаемости */
+        background: linear-gradient(180deg, rgba(219,234,254,0.98), rgba(239,246,255,0.95));
+        border-color: rgba(37,99,235,0.12);
+
+        /* тень и небольшой подъём, чтобы казалась над контентом */
+        box-shadow: 0 12px 40px rgba(10,10,30,0.12);
+        transform: translateY(-2px);
+
+        /* заметный, но не слишком сильный фоновый блюр на поддерживаемых браузерах */
+        backdrop-filter: blur(6px);
+      }
+
+      /* Кнопки внутри "прилипшей" панели */
+      .controls.stuck button.ghost {
+        /* ghost — теперь контурные с акцентной рамкой */
+        background: transparent;
+        color: var(--accent);
+        border: 1px solid rgba(37,99,235,0.18);
+        box-shadow: none;
+      }
+
+      .controls.stuck button:not(.ghost) {
+        /* основная кнопка (если есть) — заполненная акцентом, чуть тень */
+        background: var(--accent);
+        color: #fff;
+        box-shadow: 0 6px 18px rgba(37,99,235,0.10);
+      }
+
+      .controls.stuck .toolbar-info {
+        color: rgba(17,24,39,0.9);
+        font-weight: 600;
+      }
+
+      .controls button:hover { transform: translateY(-1px); transition: transform .12s ease; }
+      /* ====== конец изменений для панели ====== */
+
+      button { background:var(--accent); color:white; border:0; padding:8px 10px; border-radius:8px; cursor:pointer; font-size:13px; }
+      button.ghost { background:#e5e7eb; color:#111; }
+      .table { border-radius:8px; overflow:hidden; border:1px solid var(--border); }
+      .row { display:flex; align-items:flex-start; border-bottom:1px solid var(--border); padding:8px 10px; gap:10px; }
+      .row:last-child { border-bottom:0; }
+      .row.selected { background: #dbeafe; }
+      .row.selected .index { color: var(--accent); }
+      .index { width:36px; text-align:right; color:var(--muted); font-size:13px; user-select:none; cursor:pointer; }
+      .cell { flex:1; min-height:36px; padding:6px; border-radius:6px; outline:none; white-space:pre-wrap; }
+      .cell[contenteditable="true"]:focus { box-shadow:0 0 0 3px rgba(37,99,235,0.08); }
+      .actions { display:flex; flex-direction:column; gap:6px; }
+      .small { font-size:12px; padding:6px 8px; border-radius:6px; border:1px solid var(--border); background:#fff; color:#111; cursor:pointer; }
+      .hint { font-size:12px; color:var(--muted); margin-top:10px; }
+      .drag-ghost { position:fixed; display:none; padding:6px 8px; border-radius:6px; border:1px solid rgba(0,0,0,0.12); background:#fff; z-index:9999; box-shadow:0 6px 20px rgba(10,10,20,0.08); cursor:grab; font-size:13px; }
+      .bottom-actions { display:flex; justify-content:space-between; align-items:center; margin-top:12px; gap:8px; flex-wrap:wrap; }
+      a.reset { color:var(--muted); text-decoration:underline; font-size:13px; cursor:pointer; }
+      .toolbar-info { font-size:13px; color:var(--muted); }
+      .toolbar-right { display:flex; gap:8px; align-items:center; }
+      @media (max-width:640px) { .actions { flex-direction:row; } .index { width:28px; } .toolbar-right { flex-wrap:wrap; } }
+      .toast { position:fixed; right:20px; bottom:20px; background:#111; color:#fff; padding:8px 12px; border-radius:8px; box-shadow:0 6px 18px rgba(10,10,20,0.2); opacity:0; transform:translateY(8px); transition:all .25s; pointer-events:none; }
+      .toast.show { opacity:1; transform:translateY(0); pointer-events:auto; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h1>Table Splitter — выделение всех строк</h1>
+        <p class="lead">Нажмите Select all или Ctrl/Cmd+A (если вы не редактируете текст) — все строки выделятся. Затем Ctrl/Cmd+C или Copy selected скопирует их.</p>
+
+        <!-- sentinel: помогает точно определить момент "прилипания" -->
+        <div class="controls-sentinel" id="controlsSentinel"></div>
+
+        <div class="controls" id="controls">
+          <button id="btnUndo" class="ghost">Undo (Ctrl+Z)</button>
+          <button id="btnRedo" class="ghost">Redo (Ctrl+Y)</button>
+          <button id="btnAdd" class="ghost">Добавить пустую строку</button>
+          <button id="btnSelectAll" class="ghost">Select all</button>
+          <button id="btnCopySel" class="ghost">Copy selected</button>
+          <button id="btnClearSel" class="ghost">Clear selection</button>
+
+        </div>
+
+        <div id="table" class="table" aria-label="Редактор строк"></div>
+
+        <div class="bottom-actions">
+          <div class="hint">Клик по номеру — выделить; Ctrl/Cmd+клик — добавить; Shift+клик — диапазон; двойной клик по номеру — выделить текст.</div>
+          <div class="toolbar-right">
+            <div class="toolbar-info">Undo: <span id="undoCount">0</span> — Redo: <span id="redoCount">0</span></div>
+            <a id="reset" class="reset">Сбросить к примерам</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="dragGhost" class="drag-ghost" draggable="true">Перетащите выделение</div>
+    <div id="toast" class="toast"></div>
+
+    <script>
+      /* IntersectionObserver: добавляет класс .stuck к панели при "прилипания" */
+      (function(){
+        const sentinel = document.getElementById('controlsSentinel');
+        const controls = document.getElementById('controls');
+        if(sentinel && controls && 'IntersectionObserver' in window){
+          const obs = new IntersectionObserver((entries)=>{
+            entries.forEach(e=>{
+              // когда sentinel перестаёт быть видимым — панель "прилипла" к верху
+              if(e.intersectionRatio === 0){
+                controls.classList.add('stuck');
+              } else {
+                controls.classList.remove('stuck');
+              }
+            });
+          }, { threshold: [0, 1] });
+          obs.observe(sentinel);
+        }
+      })();
+    </script>
+
+    <script>
+/* ---------- основной ваш большой скрипт (оставлен без изменений) ---------- */
+(function(){
+  const LS_KEY = "table-splitter-rows-v6";
+  let rows = [];
+  const table = document.getElementById("table");
+  const btnSplit = document.getElementById("btnSplit");
+  const btnAdd = document.getElementById("btnAdd");
+  const btnPaste = document.getElementById("btnPaste");
+  const btnExport = document.getElementById("btnExport");
+  const btnUndo = document.getElementById("btnUndo");
+  const btnRedo = document.getElementById("btnRedo");
+  const btnCopySel = document.getElementById("btnCopySel");
+  const btnSelectAll = document.getElementById("btnSelectAll");
+  const btnClearSel = document.getElementById("btnClearSel");
+  const reset = document.getElementById("reset");
+  const dragGhost = document.getElementById("dragGhost");
+  const undoCountEl = document.getElementById("undoCount");
+  const redoCountEl = document.getElementById("redoCount");
+  const toast = document.getElementById("toast");
+
+  const MAX_HISTORY = 300;
+  let undoStack = [];
+  let redoStack = [];
+  let preEditState = null;
+  let selectionInfo = null;
+
+  // selection UI
+  const selectedRows = new Set();
+  let lastSelectedIndex = null;
+
+  function showToast(msg, ms = 1000){
+    toast.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(()=> toast.classList.remove("show"), ms);
+  }
+
+  function load(){
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){
+      try{ rows = JSON.parse(raw); if(!Array.isArray(rows)) throw 0; }catch(e){ seed(); }
+    } else seed();
+  }
+  function seed(){ rows = Array.from({length:10}, (_,i)=>`Пример строка ${i+1}`); save(); } // 10 строк по умолчанию
+  function save(){ localStorage.setItem(LS_KEY, JSON.stringify(rows)); }
+
+  function stateSnapshot(){ return JSON.stringify(rows); }
+  function pushUndo(snapshot){
+    if(!snapshot) snapshot = stateSnapshot();
+    undoStack.push(snapshot);
+    if(undoStack.length>MAX_HISTORY) undoStack.shift();
+    updateHistoryUI();
+  }
+  function clearRedo(){ redoStack = []; updateHistoryUI(); }
+  function updateHistoryUI(){ undoCountEl.textContent = undoStack.length; redoCountEl.textContent = redoStack.length; btnUndo.disabled = undoStack.length===0; btnRedo.disabled = redoStack.length===0; }
+  function beforeChange(){ pushUndo(stateSnapshot()); clearRedo(); }
+
+  function undo(){
+    if(!undoStack.length) return;
+    const prev = undoStack.pop();
+    redoStack.push(stateSnapshot());
+    rows = JSON.parse(prev);
+    save();
+    selectedRows.clear();
+    lastSelectedIndex = null;
+    render();
+    updateHistoryUI();
+    showToast("Отмена");
+  }
+  function redo(){
+    if(!redoStack.length) return;
+    const next = redoStack.pop();
+    undoStack.push(stateSnapshot());
+    rows = JSON.parse(next);
+    save();
+    selectedRows.clear();
+    lastSelectedIndex = null;
+    render();
+    updateHistoryUI();
+    showToast("Повтор");
+  }
+
+  // caret helpers
+  function placeCaretAt(el, pos){
+    el.focus();
+    const range = document.createRange();
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
+    let node = walker.nextNode();
+    let acc = 0;
+    while(node){
+      const nextAcc = acc + node.nodeValue.length;
+      if(pos <= nextAcc){
+        range.setStart(node, pos - acc);
+        range.collapse(true);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        return;
+      }
+      acc = nextAcc;
+      node = walker.nextNode();
+    }
+    range.selectNodeContents(el);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+  function placeCaretAtStart(el){ placeCaretAt(el, 0); }
+  function placeCaretAtEnd(el){ placeCaretAt(el, (el.textContent || "").length); }
+
+  // selection helpers
+  function selectAllRows(){
+    selectedRows.clear();
+    for(let i=0;i<rows.length;i++) selectedRows.add(i);
+    lastSelectedIndex = rows.length - 1;
+    render();
+  }
+  function clearSelection(){ selectedRows.clear(); lastSelectedIndex = null; render(); }
+  function toggleRowSelection(idx, additive = false){
+    if(!additive){
+      selectedRows.clear();
+    }
+    if(selectedRows.has(idx)){
+      selectedRows.delete(idx);
+    } else {
+      selectedRows.add(idx);
+    }
+    lastSelectedIndex = idx;
+    render();
+  }
+  function selectRange(a, b){
+    selectedRows.clear();
+    const from = Math.min(a,b), to = Math.max(a,b);
+    for(let i=from;i<=to;i++) selectedRows.add(i);
+    lastSelectedIndex = b;
+    render();
+  }
+  function selectCellText(idx){
+    const cell = table.querySelector('[data-index="'+idx+'"] .cell');
+    if(!cell) return;
+    const sel = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(cell);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    cell.focus();
+  }
+
+  function render(){
+    table.innerHTML = "";
+    rows.forEach((text, idx) => {
+      const r = document.createElement("div"); r.className = "row"; r.dataset.index = idx;
+      if(selectedRows.has(idx)) r.classList.add("selected");
+      const id = document.createElement("div"); id.className = "index"; id.textContent = idx+1;
+      id.title = "Клик — выделить; Ctrl/Cmd+клик — добавить; Shift+клик — диапазон; двойной клик — выделить текст.";
+      id.addEventListener("click", (e)=>{
+        if(e.shiftKey && lastSelectedIndex !== null){
+          selectRange(lastSelectedIndex, idx);
+        } else if(e.ctrlKey || e.metaKey){
+          toggleRowSelection(idx, true);
+        } else {
+          selectedRows.clear();
+          selectedRows.add(idx);
+          lastSelectedIndex = idx;
+          render();
+        }
+      });
+      id.addEventListener("dblclick", (e)=>{
+        e.preventDefault();
+        selectedRows.clear();
+        selectedRows.add(idx);
+        lastSelectedIndex = idx;
+        render();
+        selectCellText(idx);
+      });
+
+      const cell = document.createElement("div"); cell.className = "cell"; cell.contentEditable = true; cell.spellcheck = false;
+      cell.innerText = text; cell.dataset.index = idx;
+      cell.addEventListener("focus", ()=>{ preEditState = stateSnapshot(); });
+      cell.addEventListener("blur", ()=>{ if(preEditState && preEditState !== stateSnapshot()){ undoStack.push(preEditState); if(undoStack.length>MAX_HISTORY) undoStack.shift(); clearRedo(); } preEditState = null; updateHistoryUI(); });
+      cell.addEventListener("input", ()=>{ rows[idx] = cell.innerText; save(); });
+
+      cell.addEventListener("keydown", (e)=>{
+        if((e.ctrlKey || e.metaKey) && e.key === "Enter"){ e.preventDefault();
+          const offsets = getSelectionOffsetsWithin(cell);
+          beforeChange();
+          if(offsets && offsets.text.length>0) { selectionInfo = { rowIndex: idx, ...offsets }; } 
+          else { const caret = getCaretIndex(cell); selectionInfo = { rowIndex: idx, start: caret ?? Math.floor(cell.innerText.length/2), end: caret ?? Math.floor(cell.innerText.length/2), text: "" }; }
+          splitSelectionIntoNewRow();
+          return;
+        }
+        if(e.shiftKey && e.key==="Enter"){
+          e.preventDefault();
+          const caret = getCaretIndex(cell) ?? cell.innerText.length;
+          const src = rows[idx] || "";
+          beforeChange();
+          if(caret < src.length){
+            const left = src.slice(0, caret).trim();
+            const right = src.slice(caret).trim();
+            rows[idx] = left;
+            rows.splice(idx+1, 0, right);
+            save();
+            render();
+            setTimeout(()=>{ const nextCell = table.querySelector('[data-index="'+(idx+1)+'"] .cell'); if(nextCell){ nextCell.focus(); placeCaretAtStart(nextCell); } }, 30);
+          } else {
+            if(idx < rows.length-1){
+              const nextCell = table.querySelector('[data-index="'+(idx+1)+'"] .cell');
+              if(nextCell){ nextCell.focus(); placeCaretAtStart(nextCell); }
+            } else {
+              rows.push(""); save(); render();
+              setTimeout(()=>{ const c = table.querySelector('[data-index="'+(rows.length-1)+'"] .cell'); if(c){ c.focus(); placeCaretAtStart(c); } }, 30);
+            }
+          }
+          return;
+        }
+        if(e.key === "Backspace" && !e.ctrlKey && !e.metaKey && !e.altKey){
+          const caret = getCaretIndex(cell) ?? 0;
+          if(caret === 0){
+            if(idx > 0){
+              e.preventDefault();
+              beforeChange();
+              const prevText = rows[idx-1] || "";
+              const curText = rows[idx] || "";
+              const prevLen = prevText.length;
+              rows[idx-1] = (prevText + (prevText && curText ? " " : "") + curText).trim();
+              rows.splice(idx, 1);
+              save();
+              render();
+              setTimeout(()=>{ const prevCell = table.querySelector('[data-index="'+(idx-1)+'"] .cell'); if(prevCell){ prevCell.focus(); placeCaretAt(prevCell, prevLen); } }, 30);
+            }
+          }
+          return;
+        }
+        if((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === "z" || e.key === "Z")){ e.preventDefault(); undo(); return; }
+        if((e.ctrlKey || e.metaKey) && ((e.key === "y" || e.key === "Y") || (e.shiftKey && (e.key === "Z" || e.key === "z")))){ e.preventDefault(); redo(); return; }
+      });
+
+      cell.addEventListener("paste", (ev)=>{
+        try{
+          const clipboard = ev.clipboardData || window.clipboardData;
+          const txt = clipboard.getData("text") || "";
+          if(!txt) return;
+          const hasNewline = /\r|\n/.test(txt);
+          const commaCount = (txt.match(/,/g)||[]).length;
+          const semCount = (txt.match(/;/g)||[]).length;
+          const tabCount = (txt.match(/\t/g)||[]).length;
+          if(hasNewline || tabCount>0 || commaCount>=2 || semCount>0){
+            ev.preventDefault(); beforeChange(); const rowIndex = Number(cell.dataset.index); processPasteText(txt, rowIndex);
+          }
+        }catch(e){}
+      });
+
+      r.addEventListener("dragover",(ev)=>{ ev.preventDefault(); r.style.background="#fbfdff"; });
+      r.addEventListener("dragleave",(ev)=>{ r.style.background=""; });
+      r.addEventListener("drop",(ev)=>{ ev.preventDefault(); r.style.background=""; const json = ev.dataTransfer.getData("application/json"); if(!json) return; try{ beforeChange(); const info = JSON.parse(json); handleDrop(info, idx); }catch(e){} });
+
+      const actions = document.createElement("div"); actions.className = "actions";
+      // removed per-row Split, Merge and Copy buttons as requested — kept Delete only
+      // new: delete button for each row
+      const btnDelete = document.createElement("button"); btnDelete.className = "small"; btnDelete.textContent = "Delete";
+      btnDelete.addEventListener("click", ()=>{
+        // immediate delete without confirmation
+        beforeChange();
+        rows.splice(idx, 1);
+        save();
+        render();
+        // focus nearby row
+        setTimeout(()=>{
+          const target = Math.max(0, Math.min(idx, rows.length-1));
+          const c = table.querySelector('[data-index="'+target+'"] .cell');
+          if(c) { c.focus(); placeCaretAtStart(c); }
+        }, 30);
+      });
+
+      actions.appendChild(btnDelete);
+
+      r.appendChild(id); r.appendChild(cell); r.appendChild(actions);
+      table.appendChild(r);
+    });
+    updateHistoryUI();
+  }
+
+  function getSelectionOffsetsWithin(element){
+    const sel = window.getSelection();
+    if(!sel || sel.rangeCount===0) return null;
+    const range = sel.getRangeAt(0);
+    if(!element.contains(range.commonAncestorContainer)) return null;
+    const pre = range.cloneRange();
+    pre.selectNodeContents(element);
+    pre.setEnd(range.startContainer, range.startOffset);
+    const start = pre.toString().length;
+    const text = range.toString();
+    const end = start + text.length;
+    return { start, end, text };
+  }
+  function getCaretIndex(el){
+    const sel = window.getSelection();
+    if(!sel || sel.rangeCount===0) return null;
+    const range = sel.getRangeAt(0);
+    if(!el.contains(range.commonAncestorContainer)) return null;
+    const pre = range.cloneRange();
+    pre.selectNodeContents(el);
+    pre.setEnd(range.startContainer, range.startOffset);
+    return pre.toString().length;
+  }
+
+  function splitSelectionIntoNewRow(){
+    if(!selectionInfo) return alert("Выделите текст внутри строки.");
+    const { rowIndex, start, end, text } = selectionInfo;
+    if(rowIndex < 0 || rowIndex >= rows.length){ selectionInfo = null; return; }
+    const src = rows[rowIndex] ?? "";
+    const before = src.slice(0, start);
+    const after = src.slice(end);
+    rows[rowIndex] = (before + after).trim();
+    rows.splice(rowIndex+1, 0, (text||"").trim());
+    save();
+    selectionInfo = null;
+    window.getSelection().removeAllRanges();
+    hideGhost();
+    render();
+    setTimeout(()=>{ const newCell = table.querySelector('[data-index="'+(rowIndex+1)+'"] .cell'); if(newCell){ newCell.focus(); placeCaretAtStart(newCell); } }, 50);
+  }
+
+  function handleDrop(info, targetIndex){
+    const sourceIndex = info.rowIndex;
+    if(typeof sourceIndex !== "number") return;
+    if(sourceIndex === targetIndex) return;
+    const src = rows[sourceIndex] ?? "";
+    const before = src.slice(0, info.start);
+    const after = src.slice(info.end);
+    rows[sourceIndex] = (before + after).trim();
+    let insertAt = targetIndex + 1;
+    rows.splice(insertAt, 0, (info.text || "").trim());
+    save();
+    render();
+    hideGhost();
+  }
+
+  function positionGhost(range){
+    const rects = range.getClientRects();
+    if(!rects || rects.length===0) return;
+    const r = rects[0];
+    dragGhost.style.left = r.right + 8 + "px";
+    dragGhost.style.top = r.top + "px";
+    dragGhost.style.display = "block";
+  }
+  function hideGhost(){ dragGhost.style.display = "none"; }
+
+  document.addEventListener("selectionchange", ()=>{
+    const sel = window.getSelection();
+    if(!sel){ selectionInfo = null; hideGhost(); return; }
+    if(sel.rangeCount===0 || sel.toString().trim()===""){ selectionInfo = null; hideGhost(); return; }
+    const range = sel.getRangeAt(0);
+    const container = range.commonAncestorContainer;
+    const cell = container.nodeType===1 && container.classList && container.classList.contains("cell") ? container
+               : container.parentElement ? container.parentElement.closest(".cell")
+               : findParentByClass(container, "cell");
+    if(!cell){ selectionInfo = null; hideGhost(); return; }
+    const offsets = getSelectionOffsetsWithin(cell);
+    if(!offsets){ selectionInfo = null; hideGhost(); return; }
+    const rowIndex = Number(cell.dataset.index);
+    selectionInfo = { rowIndex, ...offsets };
+    try{ positionGhost(range); }catch(e){ hideGhost(); }
+  });
+
+  function findParentByClass(node, cls){
+    while(node){
+      if(node.nodeType===1 && node.classList && node.classList.contains(cls)) return node;
+      node = node.parentNode;
+    }
+    return null;
+  }
+
+  dragGhost.addEventListener("dragstart", function(e){
+    if(!selectionInfo){ e.preventDefault(); return; }
+    const payload = JSON.stringify(selectionInfo);
+    e.dataTransfer.setData("application/json", payload);
+    e.dataTransfer.setData("text/plain", selectionInfo.text || "");
+    const img = document.createElement("div");
+    img.style.padding = "6px 10px";
+    img.style.background = "#fff";
+    img.style.border = "1px solid #ddd";
+    img.style.borderRadius = "6px";
+    img.style.boxShadow = "0 6px 18px rgba(10,10,20,0.08)";
+    img.style.fontSize = "13px";
+    img.style.position = "fixed";
+    img.style.top = "-1000px";
+    const txt = (selectionInfo.text || "");
+    img.textContent = txt.slice(0,40) + (txt.length>40 ? "…" : "");
+    document.body.appendChild(img);
+    e.dataTransfer.setDragImage(img, 0, 0);
+    setTimeout(()=>document.body.removeChild(img), 0);
+  });
+
+  // UI button handlers
+  if(btnSplit){ btnSplit.addEventListener("click", ()=>{ if(!selectionInfo) return alert("Выделите текст внутри строки."); beforeChange(); splitSelectionIntoNewRow(); }); }
+  btnAdd.addEventListener("click", ()=>{ beforeChange(); rows.push(""); save(); render(); setTimeout(()=>{ const c = table.querySelector('[data-index="'+(rows.length-1)+'"] .cell'); if(c) c.focus(); },50); });
+  btnUndo.addEventListener("click", undo);
+  btnRedo.addEventListener("click", redo);
+
+  btnSelectAll.addEventListener("click", ()=>{ selectAllRows(); });
+  btnClearSel.addEventListener("click", ()=>{ clearSelection(); });
+
+  btnCopySel.addEventListener("click", async ()=>{
+    if(selectedRows.size===0){ showToast("Нет выбранных строк"); return; }
+    const arr = Array.from(selectedRows).sort((a,b)=>a-b).map(i => rows[i] || "");
+    const txt = arr.join("\n");
+    try{ await navigator.clipboard.writeText(txt); showToast("Скопировано"); }catch(e){
+      const t = document.createElement("textarea"); t.value = txt; document.body.appendChild(t); t.select(); try{ document.execCommand("copy"); showToast("Скопировано"); }catch(err){ alert("Ошибка копирования"); } t.remove();
+    }
+  });
+
+  if(btnPaste){ btnPaste.addEventListener("click", async ()=>{
+    let txt = "";
+    try{ if(navigator.clipboard && navigator.clipboard.readText) txt = await navigator.clipboard.readText(); else txt = prompt("Вставьте сюда текст из Excel:") || ""; }catch(e){ txt = prompt("Вставьте сюда текст из Excel:") || ""; }
+    if(!txt) return;
+    const activeCell = document.activeElement && document.activeElement.classList && document.activeElement.classList.contains("cell") ? document.activeElement : null;
+    const insertAt = activeCell ? Number(activeCell.dataset.index) : rows.length-1;
+    beforeChange();
+    processPasteText(txt, insertAt);
+  }); }
+
+  function processPasteText(text, insertIndex){
+    text = text.replace(/\u00A0/g," ").trim();
+    let lines = text.split(/\r?\n/).map(s=>s.trim()).filter(s=>s.length>0);
+    if(lines.length === 1 && text.indexOf("\t") !== -1){
+      lines = text.split("\t").map(s=>s.trim()).filter(s=>s.length>0);
+    }
+    let items = [];
+    if(lines.length===0) return;
+    if(lines.length===1){
+      const line = lines[0];
+      const unified = line.replace(/;/g,",");
+      const tokens = unified.split(",").map(t=>t.trim()).filter(t=>t.length>0);
+      if(tokens.length <= 1) items = [unified.trim()];
+      else {
+        if(tokens.length % 2 === 0){
+          for(let i=0;i<tokens.length;i+=2) items.push((tokens[i]+", "+tokens[i+1]).trim());
+        } else {
+          for(let i=0;i<tokens.length-1;i+=2) items.push((tokens[i]+", "+tokens[i+1]).trim());
+          const last = tokens[tokens.length-1];
+          if(items.length>0) items[items.length-1] = (items[items.length-1] + ", " + last).trim();
+          else items.push(last);
+        }
+      }
+    } else {
+      lines.forEach(line=>{
+        const unified = line.replace(/;/g,",").trim();
+        const tokens = unified.split(",").map(t=>t.trim()).filter(t=>t.length>0);
+        if(tokens.length<=1){ if(unified) items.push(unified); }
+        else {
+          if(tokens.length%2===0){
+            for(let i=0;i<tokens.length;i+=2) items.push((tokens[i]+", "+tokens[i+1]).trim());
+          } else {
+            for(let i=0;i<tokens.length-1;i+=2) items.push((tokens[i]+", "+tokens[i+1]).trim());
+            const last = tokens[tokens.length-1];
+            if(items.length>0) items[items.length-1] = (items[items.length-1] + ", " + last).trim();
+            else items.push(last);
+          }
+        }
+      });
+    }
+    if(items.length===0) items = [text.trim()];
+    let idx = Math.max(0, Math.min(rows.length-1, insertIndex));
+    rows[idx] = items[0];
+    for(let i=1;i<items.length;i++) rows.splice(idx+i, 0, items[i]);
+    save();
+    render();
+  }
+
+  if(btnExport){ btnExport.addEventListener("click", ()=>{
+    const csv = rows.map(r => '"' + r.replace(/"/g,'""') + '"').join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "table-splitter.csv"; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }); }
+
+  reset.addEventListener("click", ()=>{ if(!confirm("Сбросить все строки к примерам?")) return; beforeChange(); seed(); render(); });
+
+  // global keyboard handler: supports Ctrl/Cmd+A for select all rows (when user isn't selecting text),
+  // Ctrl/Cmd+C to copy selected rows, and undo/redo
+  function globalKeyHandler(e){
+    // Ctrl/Cmd+A -> select all rows if user is NOT actively selecting text inside a cell
+    if((e.ctrlKey || e.metaKey) && (e.key === "a" || e.key === "A")){
+      const sel = window.getSelection();
+      const active = document.activeElement;
+      const isInCell = active && active.classList && active.classList.contains("cell");
+      const textSelected = sel && sel.toString().length>0;
+      if(!isInCell || !textSelected){
+        // user likely wants to select rows, not text
+        e.preventDefault();
+        selectAllRows();
+        return;
+      }
+      // otherwise let browser handle selecting text inside cell
+    }
+
+    // Copy selected rows with Ctrl/Cmd+C (if any rows are selected)
+    if((e.ctrlKey || e.metaKey) && (e.key === "c" || e.key === "C")){
+      if(selectedRows.size > 0){
+        e.preventDefault();
+        const arr = Array.from(selectedRows).sort((a,b)=>a-b).map(i => rows[i] || "");
+        const txt = arr.join("\n");
+        (async ()=>{
+          try{ await navigator.clipboard.writeText(txt); showToast("Скопировано"); }catch(err){
+            const t = document.createElement("textarea"); t.value = txt; document.body.appendChild(t); t.select(); try{ document.execCommand("copy"); showToast("Скопировано"); }catch(e){ alert("Ошибка копирования"); } t.remove();
+          }
+        })();
+        return;
+      }
+      // else allow normal Ctrl+C
+    }
+
+    // Undo / Redo
+    if((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === "z" || e.key === "Z")){ e.preventDefault(); undo(); return; }
+    if((e.ctrlKey || e.metaKey) && ((e.key === "y" || e.key === "Y") || (e.shiftKey && (e.key === "Z" || e.key === "z")))){ e.preventDefault(); redo(); return; }
+  }
+  document.addEventListener("keydown", globalKeyHandler, true);
+
+  // init
+  load();
+  undoStack = []; redoStack = [];
+  pushUndo(stateSnapshot());
+  updateHistoryUI();
+  render();
+  window._tableSplitter = { rows, render, undoStack, redoStack, selectedRows, selectAllRows, clearSelection };
+
+})();
+    </script>
+  </body>
+</html>
