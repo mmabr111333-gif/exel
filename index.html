@@ -44,280 +44,109 @@
         font-size: 13px;
       }
 
-      /* ====== Изменения для "прилипающей" панели (обновлённые стили) ====== */
-      .controls-sentinel {
-        height: 1px;
-        width: 100%;
-        display: block;
-      }
+      .controls-sentinel { height: 1px; width: 100%; display: block; }
 
       .controls {
         display: flex;
         gap: 8px;
         margin-bottom: 12px;
         flex-wrap: wrap;
-
-        /* sticky behaviour */
         position: -webkit-sticky;
         position: sticky;
         top: 16px;
         z-index: 90;
-
-        /* обычный фон — белый, плавный переход при прилипании */
         background: linear-gradient(var(--card), var(--card));
         padding: 12px;
         border-radius: 12px;
         border: 1px solid transparent;
-        transition: box-shadow 0.22s cubic-bezier(0.2, 0.9, 0.2, 1),
-          border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+        transition: box-shadow 0.22s cubic-bezier(0.2,0.9,0.2,1), border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
       }
-
-      /* когда панель "прилипла" — выделяем её визуально */
       .controls.stuck {
-        /* лёгкая синяя подложка + полупрозрачность для читаемости */
-        background: linear-gradient(
-          180deg,
-          rgba(219, 234, 254, 0.98),
-          rgba(239, 246, 255, 0.95)
-        );
-        border-color: rgba(37, 99, 235, 0.12);
-
-        /* тень и небольшой подъём, чтобы казалась над контентом */
-        box-shadow: 0 12px 40px rgba(10, 10, 30, 0.12);
+        background: linear-gradient(180deg, rgba(219,234,254,0.98), rgba(239,246,255,0.95));
+        border-color: rgba(37,99,235,0.12);
+        box-shadow: 0 12px 40px rgba(10,10,30,0.12);
         transform: translateY(-2px);
-
-        /* заметный, но не слишком сильный фоновый блюр на поддерживаемых браузерах */
         backdrop-filter: blur(6px);
       }
+      .controls.stuck button.ghost { background: transparent; color: var(--accent); border: 1px solid rgba(37,99,235,0.18); box-shadow: none; }
+      .controls.stuck button:not(.ghost) { background: var(--accent); color: #fff; box-shadow: 0 6px 18px rgba(37,99,235,0.1); }
+      .controls button:hover { transform: translateY(-1px); transition: transform 0.12s ease; }
 
-      /* Кнопки внутри "прилипшей" панели */
-      .controls.stuck button.ghost {
-        /* ghost — теперь контурные с акцентной рамкой */
-        background: transparent;
-        color: var(--accent);
-        border: 1px solid rgba(37, 99, 235, 0.18);
-        box-shadow: none;
-      }
+      button { background: var(--accent); color: white; border: 0; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+      button.ghost { background: #e5e7eb; color: #111; }
+      input[type="text"], input[type="number"] { padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: #fff; font-size: 13px; }
 
-      .controls.stuck button:not(.ghost) {
-        /* основная кнопка (если есть) — заполненная акцентом, чуть тень */
-        background: var(--accent);
-        color: #fff;
-        box-shadow: 0 6px 18px rgba(37, 99, 235, 0.1);
-      }
-
-      .controls.stuck .toolbar-info {
-        color: rgba(17, 24, 39, 0.9);
-        font-weight: 600;
-      }
-
-      .controls button:hover {
-        transform: translateY(-1px);
-        transition: transform 0.12s ease;
-      }
-      /* ====== конец изменений для панели ====== */
-
-      button {
-        background: var(--accent);
-        color: white;
-        border: 0;
-        padding: 8px 10px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 13px;
-      }
-      button.ghost {
-        background: #e5e7eb;
-        color: #111;
-      }
-      .table {
-        border-radius: 8px;
-        overflow: hidden;
-        border: 1px solid var(--border);
-      }
-      .row {
-        display: flex;
-        align-items: flex-start;
-        border-bottom: 1px solid var(--border);
-        padding: 8px 10px;
-        gap: 10px;
-      }
-      .row:last-child {
-        border-bottom: 0;
-      }
-      .row.selected {
-        background: #dbeafe;
-      }
-      .row.selected .index {
-        color: var(--accent);
-      }
-      .index {
-        width: 36px;
-        text-align: right;
-        color: var(--muted);
-        font-size: 13px;
-        user-select: none;
-        cursor: pointer;
-      }
-      .cell {
-        flex: 1;
-        min-height: 36px;
-        padding: 6px;
-        border-radius: 6px;
-        outline: none;
-        white-space: pre-wrap;
-      }
-      .cell[contenteditable="true"]:focus {
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
-      }
-      .actions {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-      .small {
-        font-size: 12px;
-        padding: 6px 8px;
-        border-radius: 6px;
-        border: 1px solid var(--border);
-        background: #fff;
-        color: #111;
-        cursor: pointer;
-      }
-      .hint {
-        font-size: 12px;
-        color: var(--muted);
-        margin-top: 10px;
-      }
-      .drag-ghost {
-        position: fixed;
-        display: none;
-        padding: 6px 8px;
-        border-radius: 6px;
-        border: 1px solid rgba(0, 0, 0, 0.12);
-        background: #fff;
-        z-index: 9999;
-        box-shadow: 0 6px 20px rgba(10, 10, 20, 0.08);
-        cursor: grab;
-        font-size: 13px;
-      }
-      .bottom-actions {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 12px;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-      a.reset {
-        color: var(--muted);
-        text-decoration: underline;
-        font-size: 13px;
-        cursor: pointer;
-      }
-      .toolbar-info {
-        font-size: 13px;
-        color: var(--muted);
-      }
-      .toolbar-right {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-      }
-      @media (max-width: 640px) {
-        .actions {
-          flex-direction: row;
-        }
-        .index {
-          width: 28px;
-        }
-        .toolbar-right {
-          flex-wrap: wrap;
-        }
-      }
-      .toast {
-        position: fixed;
-        right: 20px;
-        bottom: 20px;
-        background: #111;
-        color: #fff;
-        padding: 8px 12px;
-        border-radius: 8px;
-        box-shadow: 0 6px 18px rgba(10, 10, 20, 0.2);
-        opacity: 0;
-        transform: translateY(8px);
-        transition: all 0.25s;
-        pointer-events: none;
-      }
-      .toast.show {
-        opacity: 1;
-        transform: translateY(0);
-        pointer-events: auto;
-      }
+      .table { border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+      .row { display: flex; align-items: flex-start; border-bottom: 1px solid var(--border); padding: 8px 10px; gap: 10px; }
+      .row:last-child { border-bottom: 0; }
+      .row.selected { background: #dbeafe; }
+      .row.selected .index { color: var(--accent); }
+      .index { width: 36px; text-align: right; color: var(--muted); font-size: 13px; user-select: none; cursor: pointer; }
+      .cell { flex: 1; min-height: 36px; padding: 6px; border-radius: 6px; outline: none; white-space: pre-wrap; }
+      .cell[contenteditable="true"]:focus { box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+      .actions { display: flex; flex-direction: column; gap: 6px; }
+      .small { font-size: 12px; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border); background: #fff; color: #111; cursor: pointer; }
+      .hint { font-size: 12px; color: var(--muted); margin-top: 10px; }
+      .drag-ghost { position: fixed; display: none; padding: 6px 8px; border-radius: 6px; border: 1px solid rgba(0,0,0,0.12); background: #fff; z-index: 9999; box-shadow: 0 6px 20px rgba(10,10,20,0.08); cursor: grab; font-size: 13px; }
+      .bottom-actions { display:flex; justify-content:space-between; align-items:center; margin-top:12px; gap:8px; flex-wrap:wrap; }
+      a.reset { color: var(--muted); text-decoration: underline; font-size: 13px; cursor: pointer; }
+      .toolbar-info { font-size: 13px; color: var(--muted); }
+      .toolbar-right { display:flex; gap:8px; align-items:center; }
+      .toast { position: fixed; right:20px; bottom:20px; background:#111; color:#fff; padding:8px 12px; border-radius:8px; box-shadow:0 6px 18px rgba(10,10,20,0.2); opacity:0; transform:translateY(8px); transition: all .25s; pointer-events:none; }
+      .toast.show { opacity:1; transform:translateY(0); pointer-events:auto; }
+      @media (max-width:640px) { .actions { flex-direction:row; } .index { width:28px; } .toolbar-right { flex-wrap:wrap; } }
     </style>
   </head>
   <body>
     <div class="wrap">
       <div class="card">
         <h1>Table Splitter — выделение всех строк</h1>
-        <p class="lead">
-          Нажми кнопку «Copy all» — она автоматически выделит все строки,
-          скопирует их и очистит выделение.
-        </p>
+        <p class="lead">Нажми кнопку «Copy all» — она автоматически выделит все строки, скопирует их и очистит выделение.</p>
 
-        <!-- sentinel: помогает точно определить момент "прилипания" -->
         <div class="controls-sentinel" id="controlsSentinel"></div>
 
         <div class="controls" id="controls">
-          <!-- Перемещённая сюда ссылка Сбросить к примерам (слева) -->
-          <a id="reset" class="reset" style="margin-right: auto;">Сбросить к примерам</a>
+          <a id="reset" class="reset" style="margin-right: 8px;">Сбросить к примерам</a>
+
+          <input id="keywordsInput" type="text" placeholder="Keywords (через запятую), например: Matrix, Сибртех" style="min-width:260px"/>
+          <input id="minWordsInput" type="number" min="1" value="4" style="width:96px" title="Если строка короче — приклеить к предыдущей"/>
+
+          <button id="btnApplyKeywords" class="ghost">Apply rules</button>
+
+          <div style="flex:1"></div>
 
           <button id="btnUndo" class="ghost">Undo (Ctrl+Z)</button>
           <button id="btnRedo" class="ghost">Redo (Ctrl+Y)</button>
           <button id="btnAdd" class="ghost">Добавить пустую строку</button>
+          <button id="btnRemoveEmpty" class="ghost">Remove empty</button>
           <button id="btnCopyAll" class="ghost">Copy all</button>
         </div>
 
         <div id="table" class="table" aria-label="Редактор строк"></div>
 
         <div class="bottom-actions">
-          <div class="hint">
-            Клик по номеру — выделить; Ctrl/Cmd+клик — добавить; Shift+клик —
-            диапазон; двойной клик по номеру — выделить текст.
-          </div>
+          <div class="hint">Клик по номеру — выделить; Ctrl/Cmd+клик — добавить; Shift+клик — диапазон; двойной клик по номеру — выделить текст.</div>
           <div class="toolbar-right">
-            <div class="toolbar-info">
-              Undo: <span id="undoCount">0</span> — Redo:
-              <span id="redoCount">0</span>
-            </div>
-            <!-- Ссылка была перемещена вверх в панель управления -->
+            <div class="toolbar-info">Undo: <span id="undoCount">0</span> — Redo: <span id="redoCount">0</span></div>
           </div>
         </div>
       </div>
     </div>
 
-    <div id="dragGhost" class="drag-ghost" draggable="true">
-      Перетащите выделение
-    </div>
+    <div id="dragGhost" class="drag-ghost" draggable="true">Перетащите выделение</div>
     <div id="toast" class="toast"></div>
 
     <script>
-      /* IntersectionObserver: добавляет класс .stuck к панели при "прилипания" */
       (function () {
         const sentinel = document.getElementById("controlsSentinel");
         const controls = document.getElementById("controls");
         if (sentinel && controls && "IntersectionObserver" in window) {
           const obs = new IntersectionObserver(
-            (entries) => {
-              entries.forEach((e) => {
-                if (e.intersectionRatio === 0) {
-                  controls.classList.add("stuck");
-                } else {
-                  controls.classList.remove("stuck");
-                }
-              });
-            },
-            { threshold: [0, 1] }
+            (entries) => entries.forEach(e => {
+              if (e.intersectionRatio === 0) controls.classList.add("stuck");
+              else controls.classList.remove("stuck");
+            }),
+            { threshold: [0,1] }
           );
           obs.observe(sentinel);
         }
@@ -325,23 +154,24 @@
     </script>
 
     <script>
-      /* ---------- основной ваш большой скрипт (обновлённая версия) ---------- */
       (function () {
         const LS_KEY = "table-splitter-rows-v6";
         let rows = [];
         const table = document.getElementById("table");
-        const btnSplit = document.getElementById("btnSplit");
         const btnAdd = document.getElementById("btnAdd");
-        const btnPaste = document.getElementById("btnPaste");
-        const btnExport = document.getElementById("btnExport");
         const btnUndo = document.getElementById("btnUndo");
         const btnRedo = document.getElementById("btnRedo");
         const btnCopyAll = document.getElementById("btnCopyAll");
+        const btnRemoveEmpty = document.getElementById("btnRemoveEmpty");
         const reset = document.getElementById("reset");
         const dragGhost = document.getElementById("dragGhost");
         const undoCountEl = document.getElementById("undoCount");
         const redoCountEl = document.getElementById("redoCount");
         const toast = document.getElementById("toast");
+
+        const keywordsInput = document.getElementById("keywordsInput");
+        const minWordsInput = document.getElementById("minWordsInput");
+        const btnApplyKeywords = document.getElementById("btnApplyKeywords");
 
         const MAX_HISTORY = 300;
         let undoStack = [];
@@ -349,11 +179,10 @@
         let preEditState = null;
         let selectionInfo = null;
 
-        // selection UI
         const selectedRows = new Set();
         let lastSelectedIndex = null;
 
-        function showToast(msg, ms = 1000) {
+        function showToast(msg, ms = 1200) {
           toast.textContent = msg;
           toast.classList.add("show");
           clearTimeout(toast._t);
@@ -366,346 +195,100 @@
             try {
               rows = JSON.parse(raw);
               if (!Array.isArray(rows)) throw 0;
-              // если в localStorage остались старые примеры "Пример строка 1..10", заменим их
               const allExamples =
                 rows.length > 0 &&
-                rows.every((r) =>
-                  /^Пример строка(?: \d+)?$/.test(String(r).trim())
-                );
-              if (allExamples) {
-                seed();
-              }
+                rows.every((r) => /^Пример строка(?: \d+)?$/.test(String(r).trim()));
+              if (allExamples) seed();
             } catch (e) {
               seed();
             }
           } else seed();
         }
-        function seed() {
-          // 1 пустая строка по умолчанию
-          rows = [""];
-          save();
-        }
-        function save() {
-          localStorage.setItem(LS_KEY, JSON.stringify(rows));
+        function seed() { rows = [""]; save(); }
+        function save() { localStorage.setItem(LS_KEY, JSON.stringify(rows)); }
+
+        function stateSnapshot(){ return JSON.stringify(rows); }
+        function pushUndo(snapshot){ if(!snapshot) snapshot = stateSnapshot(); undoStack.push(snapshot); if(undoStack.length>MAX_HISTORY) undoStack.shift(); updateHistoryUI(); }
+        function clearRedo(){ redoStack = []; updateHistoryUI(); }
+        function updateHistoryUI(){ undoCountEl.textContent = undoStack.length; redoCountEl.textContent = redoStack.length; btnUndo.disabled = undoStack.length===0; btnRedo.disabled = redoStack.length===0; }
+        function beforeChange(){ pushUndo(stateSnapshot()); clearRedo(); }
+
+        function undo(){ if(!undoStack.length) return; const prev = undoStack.pop(); redoStack.push(stateSnapshot()); rows = JSON.parse(prev); save(); selectedRows.clear(); lastSelectedIndex = null; render(); updateHistoryUI(); showToast("Отмена"); }
+        function redo(){ if(!redoStack.length) return; const next = redoStack.pop(); undoStack.push(stateSnapshot()); rows = JSON.parse(next); save(); selectedRows.clear(); lastSelectedIndex = null; render(); updateHistoryUI(); showToast("Повтор"); }
+
+        function placeCaretAt(el, pos){ el.focus(); const range = document.createRange(); const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false); let node = walker.nextNode(); let acc = 0; while(node){ const nextAcc = acc + node.nodeValue.length; if(pos <= nextAcc){ range.setStart(node, pos-acc); range.collapse(true); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range); return; } acc = nextAcc; node = walker.nextNode(); } range.selectNodeContents(el); range.collapse(false); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range); }
+        function placeCaretAtStart(el){ placeCaretAt(el,0); }
+        function placeCaretAtEnd(el){ placeCaretAt(el,(el.textContent||"").length); }
+
+        function selectAllRows(){ selectedRows.clear(); for(let i=0;i<rows.length;i++) selectedRows.add(i); lastSelectedIndex = rows.length-1; render(); }
+        function clearSelection(){ selectedRows.clear(); lastSelectedIndex = null; render(); }
+        function toggleRowSelection(idx, additive=false){ if(!additive) selectedRows.clear(); if(selectedRows.has(idx)) selectedRows.delete(idx); else selectedRows.add(idx); lastSelectedIndex = idx; render(); }
+        function selectRange(a,b){ selectedRows.clear(); const from=Math.min(a,b), to=Math.max(a,b); for(let i=from;i<=to;i++) selectedRows.add(i); lastSelectedIndex = b; render(); }
+        function selectCellText(idx){ const cell = table.querySelector('[data-index="'+idx+'"] .cell'); if(!cell) return; const sel = window.getSelection(); const range = document.createRange(); range.selectNodeContents(cell); sel.removeAllRanges(); sel.addRange(range); cell.focus(); }
+
+        function getSelectionOffsetsWithin(element){ const sel = window.getSelection(); if(!sel||sel.rangeCount===0) return null; const range = sel.getRangeAt(0); if(!element.contains(range.commonAncestorContainer)) return null; const pre = range.cloneRange(); pre.selectNodeContents(element); pre.setEnd(range.startContainer, range.startOffset); const start = pre.toString().length; const text = range.toString(); const end = start + text.length; return {start,end,text}; }
+        function getCaretIndex(el){ const sel = window.getSelection(); if(!sel||sel.rangeCount===0) return null; const range = sel.getRangeAt(0); if(!el.contains(range.commonAncestorContainer)) return null; const pre = range.cloneRange(); pre.selectNodeContents(el); pre.setEnd(range.startContainer, range.startOffset); return pre.toString().length; }
+
+        function processPasteText(txt,rowIndex){
+          if(!txt) return;
+          const lines = txt.replace(/\r\n/g,"\n").replace(/\r/g,"\n").split("\n")
+            .map(ln=>ln.replace(/\t+/g," ").replace(/;+/g," ").replace(/,+/g," ").replace(/\s+/g," ").trim())
+            .filter(ln=>ln.length>0);
+          if(lines.length===0) return;
+          if(typeof rowIndex === "number" && rowIndex>=0 && rowIndex<rows.length){
+            rows[rowIndex]=lines[0];
+            if(lines.length>1) rows.splice(rowIndex+1,0,...lines.slice(1));
+          } else rows.push(...lines);
+          save(); render();
+          setTimeout(()=>{ const idx = Math.max(0, Math.min(rowIndex||0, rows.length-1)); const c = table.querySelector('[data-index="'+idx+'"] .cell'); if(c){ c.focus(); placeCaretAtEnd(c); } }, 30);
         }
 
-        function stateSnapshot() {
-          return JSON.stringify(rows);
-        }
-        function pushUndo(snapshot) {
-          if (!snapshot) snapshot = stateSnapshot();
-          undoStack.push(snapshot);
-          if (undoStack.length > MAX_HISTORY) undoStack.shift();
-          updateHistoryUI();
-        }
-        function clearRedo() {
-          redoStack = [];
-          updateHistoryUI();
-        }
-        function updateHistoryUI() {
-          undoCountEl.textContent = undoStack.length;
-          redoCountEl.textContent = redoStack.length;
-          btnUndo.disabled = undoStack.length === 0;
-          btnRedo.disabled = redoStack.length === 0;
-        }
-        function beforeChange() {
-          pushUndo(stateSnapshot());
-          clearRedo();
-        }
-
-        function undo() {
-          if (!undoStack.length) return;
-          const prev = undoStack.pop();
-          redoStack.push(stateSnapshot());
-          rows = JSON.parse(prev);
-          save();
-          selectedRows.clear();
-          lastSelectedIndex = null;
-          render();
-          updateHistoryUI();
-          showToast("Отмена");
-        }
-        function redo() {
-          if (!redoStack.length) return;
-          const next = redoStack.pop();
-          undoStack.push(stateSnapshot());
-          rows = JSON.parse(next);
-          save();
-          selectedRows.clear();
-          lastSelectedIndex = null;
-          render();
-          updateHistoryUI();
-          showToast("Повтор");
-        }
-
-        // caret helpers
-        function placeCaretAt(el, pos) {
-          el.focus();
-          const range = document.createRange();
-          const walker = document.createTreeWalker(
-            el,
-            NodeFilter.SHOW_TEXT,
-            null,
-            false
-          );
-          let node = walker.nextNode();
-          let acc = 0;
-          while (node) {
-            const nextAcc = acc + node.nodeValue.length;
-            if (pos <= nextAcc) {
-              range.setStart(node, pos - acc);
-              range.collapse(true);
-              const sel = window.getSelection();
-              sel.removeAllRanges();
-              sel.addRange(range);
-              return;
-            }
-            acc = nextAcc;
-            node = walker.nextNode();
-          }
-          range.selectNodeContents(el);
-          range.collapse(false);
-          const sel = window.getSelection();
-          sel.removeAllRanges();
-          sel.addRange(range);
-        }
-        function placeCaretAtStart(el) {
-          placeCaretAt(el, 0);
-        }
-        function placeCaretAtEnd(el) {
-          placeCaretAt(el, (el.textContent || "").length);
-        }
-
-        // selection helpers
-        function selectAllRows() {
-          selectedRows.clear();
-          for (let i = 0; i < rows.length; i++) selectedRows.add(i);
-          lastSelectedIndex = rows.length - 1;
-          render();
-        }
-        function clearSelection() {
-          selectedRows.clear();
-          lastSelectedIndex = null;
-          render();
-        }
-        function toggleRowSelection(idx, additive = false) {
-          if (!additive) {
-            selectedRows.clear();
-          }
-          if (selectedRows.has(idx)) {
-            selectedRows.delete(idx);
-          } else {
-            selectedRows.add(idx);
-          }
-          lastSelectedIndex = idx;
-          render();
-        }
-        function selectRange(a, b) {
-          selectedRows.clear();
-          const from = Math.min(a, b),
-            to = Math.max(a, b);
-          for (let i = from; i <= to; i++) selectedRows.add(i);
-          lastSelectedIndex = b;
-          render();
-        }
-        function selectCellText(idx) {
-          const cell = table.querySelector('[data-index="' + idx + '"] .cell');
-          if (!cell) return;
-          const sel = window.getSelection();
-          const range = document.createRange();
-          range.selectNodeContents(cell);
-          sel.removeAllRanges();
-          sel.addRange(range);
-          cell.focus();
-        }
-
-        function getSelectionOffsetsWithin(element) {
-          const sel = window.getSelection();
-          if (!sel || sel.rangeCount === 0) return null;
-          const range = sel.getRangeAt(0);
-          if (!element.contains(range.commonAncestorContainer)) return null;
-          const pre = range.cloneRange();
-          pre.selectNodeContents(element);
-          pre.setEnd(range.startContainer, range.startOffset);
-          const start = pre.toString().length;
-          const text = range.toString();
-          const end = start + text.length;
-          return { start, end, text };
-        }
-        function getCaretIndex(el) {
-          const sel = window.getSelection();
-          if (!sel || sel.rangeCount === 0) return null;
-          const range = sel.getRangeAt(0);
-          if (!el.contains(range.commonAncestorContainer)) return null;
-          const pre = range.cloneRange();
-          pre.selectNodeContents(el);
-          pre.setEnd(range.startContainer, range.startOffset);
-          return pre.toString().length;
-        }
-
-        // --- новая функция: обработка вставки многострочного текста ---
-        function processPasteText(txt, rowIndex) {
-          if (!txt) return;
-          // нормализуем и разбиваем по строкам
-          const lines = txt
-            .replace(/\r\n/g, "\n")
-            .replace(/\r/g, "\n")
-            .split("\n")
-            .map((ln) =>
-              ln
-                .replace(/\t+/g, " ")
-                .replace(/;+/g, " ")
-                .replace(/,+/g, " ")
-                .replace(/\s+/g, " ")
-                .trim()
-            )
-            .filter((ln) => ln.length > 0);
-
-          if (lines.length === 0) return;
-
-          if (
-            typeof rowIndex === "number" &&
-            rowIndex >= 0 &&
-            rowIndex < rows.length
-          ) {
-            // первая линия заменяет текущую строку, остальные вставляются после неё
-            rows[rowIndex] = lines[0];
-            if (lines.length > 1) {
-              rows.splice(rowIndex + 1, 0, ...lines.slice(1));
-            }
-          } else {
-            // вставляем в конец
-            rows.push(...lines);
-          }
-          save();
-          render();
-
-          // поставить фокус на первую вставленную строку
-          setTimeout(() => {
-            const idx = Math.max(0, Math.min(rowIndex || 0, rows.length - 1));
-            const c = table.querySelector('[data-index="' + idx + '"] .cell');
-            if (c) {
-              c.focus();
-              placeCaretAtEnd(c);
-            }
-          }, 30);
-        }
-
-        function splitSelectionIntoNewRow() {
-          if (!selectionInfo) return alert("Выделите текст внутри строки.");
-          const { rowIndex, start, end, text } = selectionInfo;
-          if (rowIndex < 0 || rowIndex >= rows.length) {
-            selectionInfo = null;
-            return;
-          }
+        function splitSelectionIntoNewRow(){
+          if(!selectionInfo) return alert("Выделите текст внутри строки.");
+          const {rowIndex,start,end,text} = selectionInfo;
+          if(rowIndex<0 || rowIndex>=rows.length){ selectionInfo=null; return; }
           const src = rows[rowIndex] ?? "";
-          const before = src.slice(0, start);
+          const before = src.slice(0,start);
           const after = src.slice(end);
-          rows[rowIndex] = (before + after).trim();
-          rows.splice(rowIndex + 1, 0, (text || "").trim());
-          save();
-          selectionInfo = null;
-          window.getSelection().removeAllRanges();
-          hideGhost();
-          render();
-          setTimeout(() => {
-            const newCell = table.querySelector(
-              '[data-index="' + (rowIndex + 1) + '"] .cell'
-            );
-            if (newCell) {
-              newCell.focus();
-              placeCaretAtStart(newCell);
-            }
-          }, 50);
+          rows[rowIndex] = (before+after).trim();
+          rows.splice(rowIndex+1,0,(text||"").trim());
+          save(); selectionInfo=null; window.getSelection().removeAllRanges(); hideGhost(); render();
+          setTimeout(()=>{ const newCell = table.querySelector('[data-index="'+(rowIndex+1)+'"] .cell'); if(newCell){ newCell.focus(); placeCaretAtStart(newCell); } },50);
         }
 
-        function handleDrop(info, targetIndex) {
+        function handleDrop(info,targetIndex){
           const sourceIndex = info.rowIndex;
-          if (typeof sourceIndex !== "number") return;
-          if (sourceIndex === targetIndex) return;
+          if(typeof sourceIndex !== "number") return;
+          if(sourceIndex === targetIndex) return;
           const src = rows[sourceIndex] ?? "";
-          const before = src.slice(0, info.start);
+          const before = src.slice(0,info.start);
           const after = src.slice(info.end);
-          rows[sourceIndex] = (before + after).trim();
+          rows[sourceIndex] = (before+after).trim();
           let insertAt = targetIndex + 1;
-          rows.splice(insertAt, 0, (info.text || "").trim());
-          save();
-          render();
-          hideGhost();
+          rows.splice(insertAt,0,(info.text||"").trim());
+          save(); render(); hideGhost();
         }
 
-        function positionGhost(range) {
-          const rects = range.getClientRects();
-          if (!rects || rects.length === 0) return;
-          const r = rects[0];
-          dragGhost.style.left = r.right + 8 + "px";
-          dragGhost.style.top = r.top + "px";
-          dragGhost.style.display = "block";
-        }
-        function hideGhost() {
-          dragGhost.style.display = "none";
-        }
+        function positionGhost(range){ const rects = range.getClientRects(); if(!rects || rects.length===0) return; const r = rects[0]; dragGhost.style.left = r.right + 8 + "px"; dragGhost.style.top = r.top + "px"; dragGhost.style.display = "block"; }
+        function hideGhost(){ dragGhost.style.display = "none"; }
 
-        document.addEventListener("selectionchange", () => {
+        document.addEventListener("selectionchange", ()=>{
           const sel = window.getSelection();
-          if (!sel) {
-            selectionInfo = null;
-            hideGhost();
-            return;
-          }
-          if (sel.rangeCount === 0 || sel.toString().trim() === "") {
-            selectionInfo = null;
-            hideGhost();
-            return;
-          }
+          if(!sel){ selectionInfo=null; hideGhost(); return; }
+          if(sel.rangeCount===0 || sel.toString().trim()===""){ selectionInfo=null; hideGhost(); return; }
           const range = sel.getRangeAt(0);
           const container = range.commonAncestorContainer;
-          const cell =
-            container.nodeType === 1 &&
-            container.classList &&
-            container.classList.contains("cell")
-              ? container
-              : container.parentElement
-              ? container.parentElement.closest(".cell")
-              : findParentByClass(container, "cell");
-          if (!cell) {
-            selectionInfo = null;
-            hideGhost();
-            return;
-          }
+          const cell = container.nodeType===1 && container.classList && container.classList.contains("cell") ? container : container.parentElement ? container.parentElement.closest(".cell") : (function findParentByClass(node,cls){ while(node){ if(node.nodeType===1 && node.classList && node.classList.contains(cls)) return node; node = node.parentNode; } return null; })(container,'cell');
+          if(!cell){ selectionInfo=null; hideGhost(); return; }
           const offsets = getSelectionOffsetsWithin(cell);
-          if (!offsets) {
-            selectionInfo = null;
-            hideGhost();
-            return;
-          }
+          if(!offsets){ selectionInfo=null; hideGhost(); return; }
           const rowIndex = Number(cell.dataset.index);
           selectionInfo = { rowIndex, ...offsets };
-          try {
-            positionGhost(range);
-          } catch (e) {
-            hideGhost();
-          }
+          try { positionGhost(range); } catch(e){ hideGhost(); }
         });
 
-        function findParentByClass(node, cls) {
-          while (node) {
-            if (
-              node.nodeType === 1 &&
-              node.classList &&
-              node.classList.contains(cls)
-            )
-              return node;
-            node = node.parentNode;
-          }
-          return null;
-        }
-
-        dragGhost.addEventListener("dragstart", function (e) {
-          if (!selectionInfo) {
-            e.preventDefault();
-            return;
-          }
+        dragGhost.addEventListener("dragstart", function(e){
+          if(!selectionInfo){ e.preventDefault(); return; }
           const payload = JSON.stringify(selectionInfo);
           e.dataTransfer.setData("application/json", payload);
           e.dataTransfer.setData("text/plain", selectionInfo.text || "");
@@ -719,226 +302,165 @@
           img.style.position = "fixed";
           img.style.top = "-1000px";
           const txt = selectionInfo.text || "";
-          img.textContent = txt.slice(0, 40) + (txt.length > 40 ? "…" : "");
+          img.textContent = txt.slice(0,40) + (txt.length>40 ? "…" : "");
           document.body.appendChild(img);
-          e.dataTransfer.setDragImage(img, 0, 0);
-          setTimeout(() => document.body.removeChild(img), 0);
+          e.dataTransfer.setDragImage(img,0,0);
+          setTimeout(()=>document.body.removeChild(img),0);
         });
 
-        // UI button handlers
-        if (btnSplit) {
-          btnSplit.addEventListener("click", () => {
-            if (!selectionInfo) return alert("Выделите текст внутри строки.");
-            beforeChange();
-            splitSelectionIntoNewRow();
-          });
-        }
-        btnAdd.addEventListener("click", () => {
-          beforeChange();
-          rows.push("");
-          save();
-          render();
-          setTimeout(() => {
-            const c = table.querySelector(
-              '[data-index="' + (rows.length - 1) + '"] .cell'
-            );
-            if (c) c.focus();
-          }, 50);
+        // UI handlers
+        btnAdd.addEventListener("click", ()=>{
+          beforeChange(); rows.push(""); save(); render();
+          setTimeout(()=>{ const c = table.querySelector('[data-index="'+(rows.length-1)+'"] .cell'); if(c) c.focus(); },50);
         });
         btnUndo.addEventListener("click", undo);
         btnRedo.addEventListener("click", redo);
 
-        // new single-button workflow: select all -> copy -> clear selection
-        if (btnCopyAll) {
-          btnCopyAll.addEventListener("click", async () => {
-            if (rows.length === 0) {
-              showToast("Нет строк для копирования");
-              return;
-            }
-            // select all (визуально)
+        if(btnCopyAll){
+          btnCopyAll.addEventListener("click", async ()=>{
+            if(rows.length===0){ showToast("Нет строк для копирования"); return; }
             selectAllRows();
-
-            // prepare text
-            const arr = Array.from(selectedRows)
-              .sort((a, b) => a - b)
-              .map((i) => rows[i] || "");
+            const arr = Array.from(selectedRows).sort((a,b)=>a-b).map(i=>rows[i]||"");
             const txt = arr.join("\n");
-
-            // copy to clipboard (try async API, fallback to textarea)
-            try {
-              await navigator.clipboard.writeText(txt);
-              showToast("Скопировано");
-            } catch (err) {
-              const t = document.createElement("textarea");
-              t.value = txt;
-              document.body.appendChild(t);
-              t.select();
-              try {
-                document.execCommand("copy");
-                showToast("Скопировано");
-              } catch (e) {
-                alert("Ошибка копирования");
-              }
+            try{ await navigator.clipboard.writeText(txt); showToast("Скопировано"); }
+            catch(err){
+              const t = document.createElement("textarea"); t.value = txt; document.body.appendChild(t); t.select();
+              try{ document.execCommand("copy"); showToast("Скопировано"); } catch(e){ alert("Ошибка копирования"); }
               t.remove();
             }
-
-            // clear selection UI сразу
             clearSelection();
           });
         }
 
-        // keep old paste/export handlers safe (они могут отсутствовать в DOM)
-        if (btnPaste) {
-          btnPaste.addEventListener("click", async () => {
-            let txt = "";
-            try {
-              if (navigator.clipboard && navigator.clipboard.readText)
-                txt = await navigator.clipboard.readText();
-              else txt = prompt("Вставьте сюда текст из Excel:") || "";
-            } catch (e) {
-              txt = prompt("Вставьте сюда текст из Excel:") || "";
-            }
-            if (!txt) return;
-            const activeCell =
-              document.activeElement &&
-              document.activeElement.classList &&
-              document.activeElement.classList.contains("cell")
-                ? document.activeElement
-                : null;
-            const insertAt = activeCell
-              ? Number(activeCell.dataset.index)
-              : rows.length - 1;
+        // Remove empty rows button (без подтверждения)
+        if(btnRemoveEmpty){
+          btnRemoveEmpty.addEventListener("click", ()=>{
+            if(rows.length===0){ showToast("Нет строк"); return; }
             beforeChange();
-            processPasteText(txt, insertAt);
+            const nonEmpty = rows.filter(r => String(r).trim().length > 0);
+            const deletedCount = rows.length - nonEmpty.length;
+            rows = nonEmpty.length ? nonEmpty.slice() : [""];
+            save(); render();
+            showToast(`Удалено ${deletedCount} пустых строк`);
           });
         }
 
-        if (btnExport) {
-          btnExport.addEventListener("click", () => {
-            const csv = rows
-              .map((r) => '"' + r.replace(/"/g, '""') + '"')
-              .join("\n");
-            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "table-splitter.csv";
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
-          });
-        }
-
-        reset.addEventListener("click", () => {
-          if (!confirm("Сбросить все строки к примерам?")) return;
+        // Reset (без подтверждения)
+        reset.addEventListener("click", ()=>{
           beforeChange();
           seed();
           render();
+          showToast("Сброшено к примерам");
         });
 
-        // global keyboard handler
-        function globalKeyHandler(e) {
-          // Ctrl/Cmd+A -> select all rows если пользователь НЕ внутри текста
-          if ((e.ctrlKey || e.metaKey) && (e.key === "a" || e.key === "A")) {
-            const sel = window.getSelection();
-            const active = document.activeElement;
-            const isInCell =
-              active && active.classList && active.classList.contains("cell");
-            const textSelected = sel && sel.toString().length > 0;
-            if (!isInCell || !textSelected) {
-              e.preventDefault();
-              selectAllRows();
-              return;
+        // === KEYWORDS logic (Unicode-aware) ===
+        function escapeRegex(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+
+        btnApplyKeywords.addEventListener("click", ()=>{
+          const rawKeys = (keywordsInput.value || "").trim();
+          if(!rawKeys){ alert("Введите хотя бы одно ключевое слово (через запятую)."); return; }
+          const keys = rawKeys.split(",").map(k=>k.trim()).filter(Boolean);
+          if(keys.length===0){ alert("Ключевые слова не распознаны."); return; }
+          let minWords = parseInt(minWordsInput.value,10);
+          if(isNaN(minWords) || minWords < 1) minWords = 1;
+
+          beforeChange();
+
+          // join preserving existing empty lines
+          const joined = rows.join("\n");
+
+          // Build pattern from escaped keys
+          const pattern = keys.map(k => escapeRegex(k)).join("|");
+
+          // We'll use Unicode-aware delimiting:
+          // match (start or non-letter/num) (key) (followed by non-letter/num or end)
+          // flags: g,i,u  — global, case-insensitive, unicode
+          const re = new RegExp("(^|[^\\p{L}\\p{N}])(" + pattern + ")(?=[^\\p{L}\\p{N}]|$)", "giu");
+
+          const replaced = joined.replace(re, (full, prefix, word) => {
+            return (prefix || "") + word + "\n";
+          });
+
+          // split into lines, preserve empty lines
+          const lines = replaced.split("\n").map(ln => ln.replace(/^\s+|\s+$/g, ""));
+
+          // helper: does line contain any keyword (case-insensitive)
+          const hasKeywordIn = (text) => {
+            if(!text) return false;
+            const low = text.toLowerCase();
+            return keys.some(k => low.includes(k.toLowerCase()));
+          };
+
+          // glue short lines that contain a keyword to the previous non-empty line
+          for(let i=0;i<lines.length;i++){
+            const cur = lines[i];
+            const wordsCount = (cur.match(/\S+/g) || []).length;
+            if(cur !== "" && wordsCount < minWords && hasKeywordIn(cur)){
+              // find previous non-empty line
+              let j = i - 1;
+              while(j >= 0 && lines[j] === "") j--;
+              if(j >= 0){
+                lines[j] = (lines[j] + " " + cur).replace(/\s+/g, " ").trim();
+                lines[i] = ""; // leave empty to preserve visual break
+              }
             }
           }
 
-          // Copy selected rows with Ctrl/Cmd+C
-          if ((e.ctrlKey || e.metaKey) && (e.key === "c" || e.key === "C")) {
-            if (selectedRows.size > 0) {
+          rows = lines.slice();
+          save();
+          render();
+          showToast("Применено");
+        });
+
+        // global keyboard handler (same behavior as before)
+        function globalKeyHandler(e){
+          if((e.ctrlKey||e.metaKey) && (e.key === "a" || e.key === "A")){
+            const sel = window.getSelection();
+            const active = document.activeElement;
+            const isInCell = active && active.classList && active.classList.contains("cell");
+            const textSelected = sel && sel.toString().length > 0;
+            if(!isInCell || !textSelected){ e.preventDefault(); selectAllRows(); return; }
+          }
+          if((e.ctrlKey||e.metaKey) && (e.key === "c" || e.key === "C")){
+            if(selectedRows.size > 0){
               e.preventDefault();
-              const arr = Array.from(selectedRows)
-                .sort((a, b) => a - b)
-                .map((i) => rows[i] || "");
+              const arr = Array.from(selectedRows).sort((a,b)=>a-b).map(i=>rows[i]||"");
               const txt = arr.join("\n");
-              (async () => {
-                try {
-                  await navigator.clipboard.writeText(txt);
-                  showToast("Скопировано");
-                } catch (err) {
-                  const t = document.createElement("textarea");
-                  t.value = txt;
-                  document.body.appendChild(t);
-                  t.select();
-                  try {
-                    document.execCommand("copy");
-                    showToast("Скопировано");
-                  } catch (e) {
-                    alert("Ошибка копирования");
-                  }
+              (async ()=>{
+                try{ await navigator.clipboard.writeText(txt); showToast("Скопировано"); }
+                catch(err){
+                  const t = document.createElement("textarea"); t.value = txt; document.body.appendChild(t); t.select();
+                  try{ document.execCommand("copy"); showToast("Скопировано"); } catch(e){ alert("Ошибка копирования"); }
                   t.remove();
                 }
               })();
               return;
             }
           }
-
-          // Undo / Redo
-          if (
-            (e.ctrlKey || e.metaKey) &&
-            !e.shiftKey &&
-            (e.key === "z" || e.key === "Z")
-          ) {
-            e.preventDefault();
-            undo();
-            return;
-          }
-          if (
-            (e.ctrlKey || e.metaKey) &&
-            (e.key === "y" ||
-              e.key === "Y" ||
-              (e.shiftKey && (e.key === "Z" || e.key === "z")))
-          ) {
-            e.preventDefault();
-            redo();
-            return;
-          }
+          if((e.ctrlKey||e.metaKey) && !e.shiftKey && (e.key === "z" || e.key === "Z")){ e.preventDefault(); undo(); return; }
+          if((e.ctrlKey||e.metaKey) && (e.key === "y" || e.key === "Y" || (e.shiftKey && (e.key === "Z" || e.key === "z")))){ e.preventDefault(); redo(); return; }
         }
         document.addEventListener("keydown", globalKeyHandler, true);
 
-        // render function
-        function render() {
+        // render (same as before)
+        function render(){
           table.innerHTML = "";
           rows.forEach((text, idx) => {
             const r = document.createElement("div");
             r.className = "row";
             r.dataset.index = idx;
             if (selectedRows.has(idx)) r.classList.add("selected");
+
             const id = document.createElement("div");
             id.className = "index";
             id.textContent = idx + 1;
-            id.title =
-              "Клик — выделить; Ctrl/Cmd+клик — добавить; Shift+клик — диапазон; двойной клик — выделить текст.";
+            id.title = "Клик — выделить; Ctrl/Cmd+клик — добавить; Shift+клик — диапазон; двойной клик — выделить текст.";
             id.addEventListener("click", (e) => {
-              if (e.shiftKey && lastSelectedIndex !== null) {
-                selectRange(lastSelectedIndex, idx);
-              } else if (e.ctrlKey || e.metaKey) {
-                toggleRowSelection(idx, true);
-              } else {
-                selectedRows.clear();
-                selectedRows.add(idx);
-                lastSelectedIndex = idx;
-                render();
-              }
+              if (e.shiftKey && lastSelectedIndex !== null) { selectRange(lastSelectedIndex, idx); }
+              else if (e.ctrlKey || e.metaKey) { toggleRowSelection(idx, true); }
+              else { selectedRows.clear(); selectedRows.add(idx); lastSelectedIndex = idx; render(); }
             });
-            id.addEventListener("dblclick", (e) => {
-              e.preventDefault();
-              selectedRows.clear();
-              selectedRows.add(idx);
-              lastSelectedIndex = idx;
-              render();
-              selectCellText(idx);
-            });
+            id.addEventListener("dblclick", (e) => { e.preventDefault(); selectedRows.clear(); selectedRows.add(idx); lastSelectedIndex = idx; render(); selectCellText(idx); });
 
             const cell = document.createElement("div");
             cell.className = "cell";
@@ -946,9 +468,7 @@
             cell.spellcheck = false;
             cell.innerText = text;
             cell.dataset.index = idx;
-            cell.addEventListener("focus", () => {
-              preEditState = stateSnapshot();
-            });
+            cell.addEventListener("focus", () => { preEditState = stateSnapshot(); });
             cell.addEventListener("blur", () => {
               if (preEditState && preEditState !== stateSnapshot()) {
                 undoStack.push(preEditState);
@@ -958,26 +478,17 @@
               preEditState = null;
               updateHistoryUI();
             });
-            cell.addEventListener("input", () => {
-              rows[idx] = cell.innerText;
-              save();
-            });
+            cell.addEventListener("input", () => { rows[idx] = cell.innerText; save(); });
 
             cell.addEventListener("keydown", (e) => {
               if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
                 e.preventDefault();
                 const offsets = getSelectionOffsetsWithin(cell);
                 beforeChange();
-                if (offsets && offsets.text.length > 0) {
-                  selectionInfo = { rowIndex: idx, ...offsets };
-                } else {
+                if (offsets && offsets.text.length > 0) selectionInfo = { rowIndex: idx, ...offsets };
+                else {
                   const caret = getCaretIndex(cell);
-                  selectionInfo = {
-                    rowIndex: idx,
-                    start: caret ?? Math.floor(cell.innerText.length / 2),
-                    end: caret ?? Math.floor(cell.innerText.length / 2),
-                    text: "",
-                  };
+                  selectionInfo = { rowIndex: idx, start: caret ?? Math.floor(cell.innerText.length/2), end: caret ?? Math.floor(cell.innerText.length/2), text: "" };
                 }
                 splitSelectionIntoNewRow();
                 return;
@@ -992,195 +503,72 @@
                   const right = src.slice(caret).trim();
                   rows[idx] = left;
                   rows.splice(idx + 1, 0, right);
-                  save();
-                  render();
-                  setTimeout(() => {
-                    const nextCell = table.querySelector(
-                      '[data-index="' + (idx + 1) + '"] .cell'
-                    );
-                    if (nextCell) {
-                      nextCell.focus();
-                      placeCaretAtStart(nextCell);
-                    }
-                  }, 30);
+                  save(); render();
+                  setTimeout(()=>{ const nextCell = table.querySelector('[data-index="'+(idx+1)+'"] .cell'); if(nextCell){ nextCell.focus(); placeCaretAtStart(nextCell);} },30);
                 } else {
-                  if (idx < rows.length - 1) {
-                    const nextCell = table.querySelector(
-                      '[data-index="' + (idx + 1) + '"] .cell'
-                    );
-                    if (nextCell) {
-                      nextCell.focus();
-                      placeCaretAtStart(nextCell);
-                    }
-                  } else {
-                    rows.push("");
-                    save();
-                    render();
-                    setTimeout(() => {
-                      const c = table.querySelector(
-                        '[data-index="' + (rows.length - 1) + '"] .cell'
-                      );
-                      if (c) {
-                        c.focus();
-                        placeCaretAtStart(c);
-                      }
-                    }, 30);
-                  }
+                  if (idx < rows.length - 1) { const nextCell = table.querySelector('[data-index="'+(idx+1)+'"] .cell'); if(nextCell){ nextCell.focus(); placeCaretAtStart(nextCell);} }
+                  else { rows.push(""); save(); render(); setTimeout(()=>{ const c = table.querySelector('[data-index="'+(rows.length-1)+'"] .cell'); if(c){ c.focus(); placeCaretAtStart(c);} },30); }
                 }
                 return;
               }
-              if (
-                e.key === "Backspace" &&
-                !e.ctrlKey &&
-                !e.metaKey &&
-                !e.altKey
-              ) {
+              if (e.key === "Backspace" && !e.ctrlKey && !e.metaKey && !e.altKey) {
                 const caret = getCaretIndex(cell) ?? 0;
                 if (caret === 0) {
                   if (idx > 0) {
                     e.preventDefault();
                     beforeChange();
-                    const prevText = rows[idx - 1] || "";
+                    const prevText = rows[idx-1] || "";
                     const curText = rows[idx] || "";
                     const prevLen = prevText.length;
-                    rows[idx - 1] = (
-                      prevText +
-                      (prevText && curText ? " " : "") +
-                      curText
-                    ).trim();
-                    rows.splice(idx, 1);
-                    save();
-                    render();
-                    setTimeout(() => {
-                      const prevCell = table.querySelector(
-                        '[data-index="' + (idx - 1) + '"] .cell'
-                      );
-                      if (prevCell) {
-                        prevCell.focus();
-                        placeCaretAt(prevCell, prevLen);
-                      }
-                    }, 30);
+                    rows[idx-1] = (prevText + (prevText && curText ? " " : "") + curText).trim();
+                    rows.splice(idx,1);
+                    save(); render();
+                    setTimeout(()=>{ const prevCell = table.querySelector('[data-index="'+(idx-1)+'"] .cell'); if(prevCell){ prevCell.focus(); placeCaretAt(prevCell, prevLen); } },30);
                   }
                 }
                 return;
               }
-              if (
-                (e.ctrlKey || e.metaKey) &&
-                !e.shiftKey &&
-                (e.key === "z" || e.key === "Z")
-              ) {
-                e.preventDefault();
-                undo();
-                return;
-              }
-              if (
-                (e.ctrlKey || e.metaKey) &&
-                (e.key === "y" ||
-                  e.key === "Y" ||
-                  (e.shiftKey && (e.key === "Z" || e.key === "z")))
-              ) {
-                e.preventDefault();
-                redo();
-                return;
-              }
+              if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === "z" || e.key === "Z")) { e.preventDefault(); undo(); return; }
+              if ((e.ctrlKey || e.metaKey) && (e.key === "y" || e.key === "Y" || (e.shiftKey && (e.key === "Z" || e.key === "z")))) { e.preventDefault(); redo(); return; }
             });
 
-            // --- обновлённый обработчик paste: поддержка многострочных вставок ---
             cell.addEventListener("paste", (ev) => {
               try {
                 const clipboard = ev.clipboardData || window.clipboardData;
                 const txt = clipboard ? clipboard.getData("text") || "" : "";
                 if (!txt) return;
-
                 const hasNewline = /\r|\n/.test(txt);
                 const tabCount = (txt.match(/\t/g) || []).length;
                 const commaCount = (txt.match(/,/g) || []).length;
                 const semCount = (txt.match(/;/g) || []).length;
-
-                // если многострочный/таб/CSV-ish — обрабатываем как вставку нескольких строк
-                if (
-                  hasNewline ||
-                  tabCount > 0 ||
-                  commaCount >= 2 ||
-                  semCount > 0
-                ) {
-                  ev.preventDefault();
-                  beforeChange();
-                  const rowIndex = Number(cell.dataset.index);
-                  processPasteText(txt, rowIndex);
-                  return;
+                if (hasNewline || tabCount > 0 || commaCount >= 2 || semCount > 0) {
+                  ev.preventDefault(); beforeChange(); const rowIndex = Number(cell.dataset.index); processPasteText(txt, rowIndex); return;
                 }
-
-                // иначе — однострочный текст: вставляем в позицию курсора вручную
                 ev.preventDefault();
-                const caret =
-                  getCaretIndex(cell) ?? (cell.innerText || "").length;
+                const caret = getCaretIndex(cell) ?? (cell.innerText || "").length;
                 const cur = rows[Number(cell.dataset.index)] || "";
                 const left = cur.slice(0, caret);
                 const right = cur.slice(caret);
                 const insert = txt.replace(/\r/g, "");
-                rows[Number(cell.dataset.index)] = (
-                  left +
-                  insert +
-                  right
-                ).trim();
-                save();
-                render();
-                setTimeout(() => {
-                  const newCell = table.querySelector(
-                    '[data-index="' + Number(cell.dataset.index) + '"] .cell'
-                  );
-                  if (newCell) {
-                    newCell.focus();
-                    placeCaretAt(newCell, (left + insert).length);
-                  }
-                }, 30);
-              } catch (e) {
-                // в крайнем случае ничего не мешаем браузеру
-              }
+                rows[Number(cell.dataset.index)] = (left + insert + right).trim();
+                save(); render();
+                setTimeout(()=>{ const newCell = table.querySelector('[data-index="'+Number(cell.dataset.index)+'"] .cell'); if(newCell){ newCell.focus(); placeCaretAt(newCell, (left+insert).length); } },30);
+              } catch(e) { /* fallback */ }
             });
 
-            r.addEventListener("dragover", (ev) => {
-              ev.preventDefault();
-              r.style.background = "#fbfdff";
-            });
-            r.addEventListener("dragleave", (ev) => {
-              r.style.background = "";
-            });
-            r.addEventListener("drop", (ev) => {
-              ev.preventDefault();
-              r.style.background = "";
-              const json = ev.dataTransfer.getData("application/json");
-              if (!json) return;
-              try {
-                beforeChange();
-                const info = JSON.parse(json);
-                handleDrop(info, idx);
-              } catch (e) {}
-            });
+            r.addEventListener("dragover", (ev)=>{ ev.preventDefault(); r.style.background = "#fbfdff"; });
+            r.addEventListener("dragleave", (ev)=>{ r.style.background = ""; });
+            r.addEventListener("drop", (ev)=>{ ev.preventDefault(); r.style.background=""; const json = ev.dataTransfer.getData("application/json"); if(!json) return; try{ beforeChange(); const info = JSON.parse(json); handleDrop(info, idx); } catch(e){} });
 
             const actions = document.createElement("div");
             actions.className = "actions";
             const btnDelete = document.createElement("button");
             btnDelete.className = "small";
             btnDelete.textContent = "Delete";
-            btnDelete.addEventListener("click", () => {
-              beforeChange();
-              rows.splice(idx, 1);
-              save();
-              render();
-              setTimeout(() => {
-                const target = Math.max(0, Math.min(idx, rows.length - 1));
-                const c = table.querySelector(
-                  '[data-index="' + target + '"] .cell'
-                );
-                if (c) {
-                  c.focus();
-                  placeCaretAtStart(c);
-                }
-              }, 30);
+            btnDelete.addEventListener("click", ()=>{
+              beforeChange(); rows.splice(idx,1); save(); render();
+              setTimeout(()=>{ const target = Math.max(0, Math.min(idx, rows.length-1)); const c = table.querySelector('[data-index="'+target+'"] .cell'); if(c){ c.focus(); placeCaretAtStart(c); } },30);
             });
-
             actions.appendChild(btnDelete);
 
             r.appendChild(id);
@@ -1198,15 +586,8 @@
         pushUndo(stateSnapshot());
         updateHistoryUI();
         render();
-        window._tableSplitter = {
-          rows,
-          render,
-          undoStack,
-          redoStack,
-          selectedRows,
-          selectAllRows,
-          clearSelection,
-        };
+        window._tableSplitter = { rows, render, undoStack, redoStack, selectedRows, selectAllRows, clearSelection };
+
       })();
     </script>
   </body>
